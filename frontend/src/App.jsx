@@ -1,10 +1,9 @@
 import { useState } from "react";
-import "./App.css";
 
 function App() {
   return (
     <>
-      <div>WeSearch</div>
+      <h1 className="text-green-800">WeSearch</h1>
     </>
   );
 }
