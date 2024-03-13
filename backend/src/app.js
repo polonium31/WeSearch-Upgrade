@@ -15,10 +15,11 @@ app.use(express.static("public"));
 app.use(cookieParser());
 
 // routes participant
-import { participantRouter } from "./routes/participant.route.js";
-app.use("/api/v1/participant", participantRouter);
+import participantRoutes from "./routes/participant.routes.js";
+app.use("/api/v1/participant", participantRoutes);
 
 // routes researcher
-import { researcherRouter } from "./routes/researcher.route.js";
-app.use("/api/v1/researcher", researcherRouter);
+import researcherRoutes from "./routes/researcher.routes.js";
+app.use("/api/v1/researcher", researcherRoutes);
+
 export { app };
