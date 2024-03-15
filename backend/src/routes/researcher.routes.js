@@ -1,27 +1,53 @@
-import { userRoutes } from "./user.routes.js";
+// user.routes.js
+import { Router } from "express";
+import { upload } from "../middlewares/multer.middleware.js";
+import { verifyJWT } from "../middlewares/auth.researcher.middleware.js";
 import * as researcherController from "../controllers/researcher.controller.js";
-import { verifyJWT } from "../middleware/auth.middleware.js";
 
-const researcherRoutes = userRoutes("researcher", researcherController);
+const router = Router();
+router
+  .route("/register")
+  .post(upload.single("avatar"), researcherController.registerUser);
+router.route("/login").post(researcherController.loginUser);
+router.route("/logout").post(verifyJWT, researcherController.logoutUser);
+router
+  .route("/refresh-token")
+  .post(verifyJWT, researcherController.refreshToken);
+router
+  .route("/forgot-password")
+  .post(verifyJWT, researcherController.forgotPassword);
 
-// Add researcher-specific routes
-researcherRoutes
+// Researcher-specific routes
+router
   .route("/active-events")
   .get(verifyJWT, researcherController.activeEvents);
-researcherRoutes
-  .route("/past-events")
-  .get(verifyJWT, researcherController.pastEvents);
-researcherRoutes
-  .route("/event/:id")
-  .get(verifyJWT, researcherController.eventDetails);
-researcherRoutes
-  .route("/create-event")
-  .post(verifyJWT, researcherController.createEvent);
-researcherRoutes
+router.route("/past-events").get(verifyJWT, researcherController.pastEvents);
+router.route("/event/:id").get(verifyJWT, researcherController.eventDetails);
+router.route("/create-event").post(verifyJWT, researcherController.createEvent);
+router
   .route("/update-event/:id")
   .patch(verifyJWT, researcherController.updateEvent);
-researcherRoutes
+router
   .route("/delete-event/:id")
   .delete(verifyJWT, researcherController.deleteEvent);
 
-export default researcherRoutes;
+// Secure routes
+router.route("/profile").get(verifyJWT, researcherController.getProfile);
+router
+  .route("/update-avatar")
+  .patch(
+    verifyJWT,
+    upload.single("avatar"),
+    researcherController.updateUserAvatar
+  );
+router
+  .route("/update-profile")
+  .patch(verifyJWT, researcherController.updateProfile);
+router
+  .route("/delete-profile")
+  .delete(verifyJWT, researcherController.deleteProfile);
+router
+  .route("/reset-password")
+  .patch(verifyJWT, researcherController.changePassword);
+
+export default router;

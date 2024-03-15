@@ -53,6 +53,10 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
+userSchema.methods.isPasswordCorrect = async function (password) {
+  return await bcrypt.compare(password, this.password);
+};
+
 userSchema.methods.comparePassword = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
@@ -60,7 +64,7 @@ userSchema.methods.comparePassword = async function (password) {
 userSchema.methods.generateAccessToken = async function () {
   return await jwt.sign(
     {
-      id: this._id,
+      _id: this._id,
       email: this.email,
       firstname: this.firstname,
       lastname: this.lastname,
@@ -73,7 +77,7 @@ userSchema.methods.generateAccessToken = async function () {
 };
 
 userSchema.methods.generateRefreshToken = async function () {
-  return await jwt.sign({ id: this._id }, process.env.REFRESH_TOKEN_SECRET, {
+  return await jwt.sign({ _id: this._id }, process.env.REFRESH_TOKEN_SECRET, {
     expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
   });
 };
@@ -91,11 +95,9 @@ const participantSchema = new Schema(
     },
     DOB: {
       type: Date,
-      required: true,
     },
     location: {
       type: String,
-      required: true,
     },
     race: {
       type: String,
@@ -113,8 +115,6 @@ const participantSchema = new Schema(
   },
   { timestamps: true }
 );
-const newParticipantSchema = userSchema.add(participantSchema);
-const Participant = mongoose.model("Participant", newParticipantSchema);
 
 const researcherSchema = new Schema(
   {
@@ -133,7 +133,14 @@ const researcherSchema = new Schema(
   },
   { timestamps: true }
 );
-const newResearcherSchema = userSchema.add(researcherSchema);
-const Researcher = mongoose.model("Researcher", newResearcherSchema);
+
+const Participant = mongoose.model(
+  "Participant",
+  userSchema.clone().add(participantSchema)
+);
+const Researcher = mongoose.model(
+  "Researcher",
+  userSchema.clone().add(researcherSchema)
+);
 
 export { Participant, Researcher };
