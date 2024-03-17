@@ -17,17 +17,9 @@ router
   .route("/forgot-password")
   .post(verifyJWT, participantController.forgotPassword);
 
-// Participant-specific routes
-router.route("/events").get(verifyJWT, participantController.participantevents);
 router
-  .route("/event/:id")
-  .get(verifyJWT, participantController.participanteventDetails);
-router
-  .route("/event/:id/register")
-  .post(verifyJWT, participantController.participantregisterEvent);
-router
-  .route("/event/:id/unregister")
-  .post(verifyJWT, participantController.participantunregisterEvent);
+  .route("/reset-password")
+  .patch(verifyJWT, participantController.changePassword);
 
 // Secure routes
 router.route("/profile").get(verifyJWT, participantController.getProfile);
@@ -44,8 +36,5 @@ router
 router
   .route("/delete-profile")
   .delete(verifyJWT, participantController.deleteProfile);
-router
-  .route("/reset-password")
-  .patch(verifyJWT, participantController.changePassword);
 
 export default router;

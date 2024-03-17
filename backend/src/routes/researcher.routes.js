@@ -17,20 +17,6 @@ router
   .route("/forgot-password")
   .post(verifyJWT, researcherController.forgotPassword);
 
-// Researcher-specific routes
-router
-  .route("/active-events")
-  .get(verifyJWT, researcherController.activeEvents);
-router.route("/past-events").get(verifyJWT, researcherController.pastEvents);
-router.route("/event/:id").get(verifyJWT, researcherController.eventDetails);
-router.route("/create-event").post(verifyJWT, researcherController.createEvent);
-router
-  .route("/update-event/:id")
-  .patch(verifyJWT, researcherController.updateEvent);
-router
-  .route("/delete-event/:id")
-  .delete(verifyJWT, researcherController.deleteEvent);
-
 // Secure routes
 router.route("/profile").get(verifyJWT, researcherController.getProfile);
 router

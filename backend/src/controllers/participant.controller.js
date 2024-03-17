@@ -120,21 +120,76 @@ const logoutUser = asyncHandler(async (req, res) => {
     .clearCookie("refreshToken", options)
     .json(new ApiResponse(200, {}, "User Logged Out"));
 });
-const refreshToken = asyncHandler(async (req, res) => {});
+const refreshToken = asyncHandler(async (req, res) => {
+  const incomingRefreshToken =
+    req.cookies?.refreshToken || req.body.refreshToken;
+
+  if (!incomingRefreshToken) {
+    throw new ApiError(401, "Unauthorized");
+  }
+  const decodedToken = jwt.verify(
+    incomingRefreshToken,
+    process.env.REFRESH_TOKEN_SECRET
+  );
+  if (!decodedToken) {
+    throw new ApiError(401, "Unauthorized Access");
+  }
+
+  const user = await Participant.findById(decodedToken?._id);
+  if (!user) {
+    throw new ApiError(401, "Unauthorized Access");
+  }
+
+  if (incomingRefreshToken !== user?.refreshToken) {
+    throw new ApiError(401, "Refresh Token is Expired or Used");
+  }
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  const { newAccessToken, newRefreshToken } = createAccessAndRefreshToken(
+    user._id
+  );
+
+  return res
+    .status(200)
+    .cookie("accessToken", newAccessToken, options)
+    .cookie("refreshToken", newRefreshToken, options)
+    .json(
+      new ApiResponse(
+        200,
+        {
+          accessToken: newAccessToken,
+          refreshToken: newRefreshToken,
+        },
+        "Token Refreshed Successfully"
+      )
+    );
+});
+const changePassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  if ([oldPassword, newPassword].some((field) => field?.trim() === "")) {
+    throw new ApiError(400, "All fields are required");
+  }
+  const user = await Participant.findById(req.user._id);
+  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+  if (!isPasswordCorrect) {
+    throw new ApiError(400, "INVALID user credentials");
+  }
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false });
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password Changed Successfully"));
+});
 const forgotPassword = asyncHandler(async (req, res) => {});
+
 const getProfile = asyncHandler(async (req, res) => {});
 const updateProfile = asyncHandler(async (req, res) => {});
 const updateUserAvatar = asyncHandler(async (req, res) => {});
 const deleteProfile = asyncHandler(async (req, res) => {});
-const changePassword = asyncHandler(async (req, res) => {});
-const events = asyncHandler(async (req, res) => {});
-const eventDetails = asyncHandler(async (req, res) => {});
-const registerEvent = asyncHandler(async (req, res) => {});
-const unregisterEvent = asyncHandler(async (req, res) => {});
-const participantevents = asyncHandler(async (req, res) => {});
-const participanteventDetails = asyncHandler(async (req, res) => {});
-const participantregisterEvent = asyncHandler(async (req, res) => {});
-const participantunregisterEvent = asyncHandler(async (req, res) => {});
 
 export {
   registerUser,
@@ -147,12 +202,4 @@ export {
   updateUserAvatar,
   deleteProfile,
   changePassword,
-  events,
-  eventDetails,
-  registerEvent,
-  unregisterEvent,
-  participantevents,
-  participanteventDetails,
-  participantregisterEvent,
-  participantunregisterEvent,
 };

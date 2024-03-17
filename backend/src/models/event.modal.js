@@ -1,6 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 
-const pastEventsSchema = new Schema({
+// Define a shared schema for events
+const eventSchema = new Schema({
   theme: {
     type: String,
   },
@@ -32,6 +33,10 @@ const pastEventsSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "Participant",
   },
+  deadline: {
+    type: Date,
+    required: true,
+  },
   location: {
     type: String,
     required: true,
@@ -53,6 +58,10 @@ const pastEventsSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "Researcher",
   },
+  isActive: {
+    type: Boolean,
+    default: true,
+  },
 });
 
-export default pastEvents = mongoose.model("pastEvents", pastEventsSchema);
+export const Events = mongoose.model("Events", eventSchema);
