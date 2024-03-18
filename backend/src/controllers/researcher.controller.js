@@ -61,6 +61,7 @@ const registerUser = asyncHandler(async (req, res) => {
     .status(201)
     .json(new ApiResponse(201, userCreated, "User created Successfully"));
 });
+
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   if ([email, password].some((field) => field?.trim() === "")) {
@@ -99,6 +100,7 @@ const loginUser = asyncHandler(async (req, res) => {
       )
     );
 });
+
 const logoutUser = asyncHandler(async (req, res) => {
   await Researcher.findByIdAndUpdate(
     req.user._id,
@@ -120,6 +122,7 @@ const logoutUser = asyncHandler(async (req, res) => {
     .clearCookie("refreshToken", options)
     .json(new ApiResponse(200, {}, "User Logged Out"));
 });
+
 const refreshToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken =
     req.cookies?.refreshToken || req.body.refreshToken;
@@ -168,6 +171,7 @@ const refreshToken = asyncHandler(async (req, res) => {
       )
     );
 });
+
 const changePassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body;
   if ([oldPassword, newPassword].some((field) => field?.trim() === "")) {
@@ -184,12 +188,50 @@ const changePassword = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, {}, "Password Changed Successfully"));
 });
+
 const forgotPassword = asyncHandler(async (req, res) => {});
 
-const getProfile = asyncHandler(async (req, res) => {});
+const getProfile = asyncHandler(async (req, res) => {
+  const user = await Researcher.findById(req.user?._id).select(
+    "-password -refreshToken"
+  );
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+  return res.status(200).json(new ApiResponse(200, user, "User Profile"));
+});
+
 const updateProfile = asyncHandler(async (req, res) => {});
-const updateUserAvatar = asyncHandler(async (req, res) => {});
-const deleteProfile = asyncHandler(async (req, res) => {});
+
+const updateUserAvatar = asyncHandler(async (req, res) => {
+  const avatarLocalPath = req.file?.path;
+  if (!avatarLocalPath) {
+    throw new ApiError(400, "Avatar is Needed");
+  }
+  const avatarUrl = await uploadOnCloud(avatarLocalPath);
+  if (!avatarUrl.url) {
+    throw new ApiError(400, "Error while uploading");
+  }
+  const user = await Researcher.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: { avatar: avatarUrl.url },
+    },
+    {
+      new: true,
+    }
+  ).select("-password -refreshToken");
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "User Avatar Updated Successfully"));
+});
+
+const deleteProfile = asyncHandler(async (req, res) => {
+  await Researcher.findByIdAndDelete(req.user?._id);
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "User Profile Deleted Successfully"));
+});
 
 export {
   registerUser,

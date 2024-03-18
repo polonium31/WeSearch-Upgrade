@@ -9,6 +9,8 @@ router
   .route("/register")
   .post(upload.single("avatar"), researcherController.registerUser);
 router.route("/login").post(researcherController.loginUser);
+
+// Secure routes
 router.route("/logout").post(verifyJWT, researcherController.logoutUser);
 router
   .route("/refresh-token")
@@ -17,11 +19,10 @@ router
   .route("/forgot-password")
   .post(verifyJWT, researcherController.forgotPassword);
 
-// Secure routes
 router.route("/profile").get(verifyJWT, researcherController.getProfile);
 router
   .route("/update-avatar")
-  .patch(
+  .put(
     verifyJWT,
     upload.single("avatar"),
     researcherController.updateUserAvatar

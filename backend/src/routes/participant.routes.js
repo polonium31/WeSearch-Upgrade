@@ -9,23 +9,22 @@ router
   .route("/register")
   .post(upload.single("avatar"), participantController.registerUser);
 router.route("/login").post(participantController.loginUser);
+router.route("/forgot-password").post(participantController.forgotPassword);
+
+// Secure routes
 router.route("/logout").post(verifyJWT, participantController.logoutUser);
 router
   .route("/refresh-token")
   .post(verifyJWT, participantController.refreshToken);
-router
-  .route("/forgot-password")
-  .post(verifyJWT, participantController.forgotPassword);
 
 router
   .route("/reset-password")
   .patch(verifyJWT, participantController.changePassword);
 
-// Secure routes
 router.route("/profile").get(verifyJWT, participantController.getProfile);
 router
   .route("/update-avatar")
-  .patch(
+  .put(
     verifyJWT,
     upload.single("avatar"),
     participantController.updateUserAvatar
