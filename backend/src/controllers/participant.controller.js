@@ -6,7 +6,6 @@ import { sendEmail } from "../utils/sendEmail.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { Participant } from "../models/user.model.js";
-
 const createAccessAndRefreshToken = async (userID) => {
   try {
     const user = await Participant.findById(userID);
@@ -57,6 +56,15 @@ const registerUser = asyncHandler(async (req, res) => {
   );
   if (!userCreated) {
     throw new ApiError(500, "Something went wrong while creating a user");
+  }
+  const sendEmailResponse = await sendEmail({
+    email,
+    emailType: "verify",
+    userId: user._id,
+    userType: "participant",
+  });
+  if (!sendEmailResponse) {
+    throw new ApiError(500, "Error while sending email");
   }
   return res
     .status(201)
@@ -199,25 +207,17 @@ const forgotPassword = asyncHandler(async (req, res) => {
   if (!user) {
     throw new ApiError(404, "User not found");
   }
-  const otp = Math.floor(1000 + Math.random() * 9000);
 
-  const otpExpier = new Date();
-  otpExpier.setMinutes(otpExpier.getMinutes() + 1);
-  const templateParams = {
-    to_email: email,
-    name: user.firstname,
-    otp: otp,
-  };
-  const sendEmailResponse = await sendEmail("forgot-password", templateParams);
+  const sendEmailResponse = await sendEmail({
+    email,
+    emailType: "reset",
+    userId: user._id,
+    userType: "participant",
+  });
   if (!sendEmailResponse) {
     throw new ApiError(500, "Error while sending email");
   }
-  user.otp = otp;
-  user.otpExpier = otpExpier;
-  await user.save({ validateBeforeSave: false });
-  return res
-    .status(200)
-    .json(new ApiResponse(200, {}, "OTP sent to your email"));
+  return res.status(200).json(new ApiResponse(200, {}, "Email Send"));
 });
 
 const resetPassword = asyncHandler(async (req, res) => {

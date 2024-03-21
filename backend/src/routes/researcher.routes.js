@@ -9,15 +9,13 @@ router
   .route("/register")
   .post(upload.single("avatar"), researcherController.registerUser);
 router.route("/login").post(researcherController.loginUser);
+router.route("/forgot-password").post(researcherController.forgotPassword);
 
 // Secure routes
 router.route("/logout").post(verifyJWT, researcherController.logoutUser);
 router
   .route("/refresh-token")
   .post(verifyJWT, researcherController.refreshToken);
-router
-  .route("/forgot-password")
-  .post(verifyJWT, researcherController.forgotPassword);
 
 router.route("/profile").get(verifyJWT, researcherController.getProfile);
 router

@@ -5,7 +5,7 @@ import { uploadOnCloud } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { Researcher } from "../models/user.model.js";
-
+import { sendEmail } from "../utils/sendEmail.js";
 const createAccessAndRefreshToken = async (userID) => {
   try {
     const user = await Researcher.findById(userID);
@@ -56,6 +56,15 @@ const registerUser = asyncHandler(async (req, res) => {
   );
   if (!userCreated) {
     throw new ApiError(500, "Something went wrong while creating a user");
+  }
+  const sendEmailResponse = await sendEmail({
+    email,
+    emailType: "verify",
+    userId: user._id,
+    userType: "researcher",
+  });
+  if (!sendEmailResponse) {
+    throw new ApiError(500, "Error while sending email");
   }
   return res
     .status(201)
@@ -189,7 +198,27 @@ const changePassword = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "Password Changed Successfully"));
 });
 
-const forgotPassword = asyncHandler(async (req, res) => {});
+const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    throw new ApiError(400, "Email is required");
+  }
+  const user = await Researcher.findOne({ email });
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const sendEmailResponse = await sendEmail({
+    email,
+    emailType: "reset",
+    userId: user._id,
+    userType: "researcher",
+  });
+  if (!sendEmailResponse) {
+    throw new ApiError(500, "Error while sending email");
+  }
+  return res.status(200).json(new ApiResponse(200, {}, "Email send"));
+});
 
 const getProfile = asyncHandler(async (req, res) => {
   const user = await Researcher.findById(req.user?._id).select(
